@@ -1,0 +1,44 @@
+
+    <table border = "1">
+    <div>
+        <tr class="row">
+        <td>
+            1
+        </td>
+            <td>
+                2
+            </td>
+            <td>
+                3
+            </td>
+            <td>
+                4
+            </td>
+        </tr>
+        <tr class="row">
+            <td>
+                1
+            </td>
+            <td>
+                2
+            </td>
+            <td>
+                3
+            </td>
+            <td>
+                4
+            </td>
+        </tr>    </div>
+    </table>
+
+<script type=text/javascript>
+    $(document).ready(function(){
+    $('.row').mouseenter(function(e){
+              $(this).css("background-color", "darkred");}
+            ).mouseout(function(e){
+                $(this).css("background-color", "white");
+                })});
+
+
+</script>
+

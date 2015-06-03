@@ -1,0 +1,24 @@
+#tabs
+{
+	font-size:18px;
+	height:1160px;
+	position:absolute;
+}
+
+table
+{
+    border-spacing: 1px;
+    color: black;
+    background: white;
+    border: 1px solid black;
+}
+
+td
+{
+    font-size: 12px;
+    border: 1px solid black;
+    text-align: center;
+    /*vertical-align: middle;*/
+    white-space: nowrap;
+
+}

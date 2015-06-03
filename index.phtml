@@ -1,0 +1,556 @@
+<!--<!DOCTYPE html>-->
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <meta name="author" content="demiin" />
+    <title>Онлайн статистика</title>
+    <link rel="stylesheet" type="text/css" href="jquery-ui/css/ui-lightness/jquery-ui-1.10.4.custom.min.css">
+    <link rel="stylesheet" type="text/css" href="css/my.css">
+    <script src="jquery-2.1.1.min.js"></script>
+    <script src="jquery-ui/js/jquery.tmpl.js" type="text/javascript"></script>
+    <script src="jquery-ui/js/jquery-ui-1.10.4.custom.min.js" type="text/javascript"></script>
+    <script src="jquery-ui/development-bundle/ui/i18n/jquery-ui-i18n.js" type="text/javascript"></script>
+
+    <style type="text/css">
+        label{display:inline-block; width:4.4em; text-align: center;}
+    </style>
+    <script type="text/javascript">
+
+
+
+        $(document).ready(function()
+        {
+            $('#tabs').tabs();
+            $('button').button();
+            $('#filBtns').buttonset();
+
+            $('.flsBtns').click(function(e){
+                    e.preventDefault();
+                    // **** действующий вариант
+
+                    $.ajax({
+                        type: "POST",
+                        url:  "getFilialSubdivisions.php",
+                        dateType: "json",
+                        data: "index=" + $(this).attr('id'),
+                        success: function(response){
+                            var filDiv = [response.division0, response.division1, response.division2, response.division3];
+                            console.log(filDiv);
+                            // удаление всех вкладок
+                            for (var i = 0; i < 4; i++)
+                            {
+                                $('#tabs').find('div').remove();
+                                $('#tabs').find('table').remove();
+                                $('#tabs').find('.ui-tabs-nav li').remove();
+                            }
+                            // добавление вкладок из списка отделов выбранного филиала
+                            for (var i = 0; i < response.count; i++)
+                            {
+                                $('<li><a href="#tab_' + i + '" value="' + filDiv[i] + '"><span>' + filDiv[i] + '</span></a></li>').appendTo('#tabs .ui-tabs-nav');
+//                                $('<li><a href="tmpltable.html"><span>' + filDiv[i] + '</span></a></li>').appendTo('#tabs .ui-tabs-nav');
+                            }
+                            for (var i = 0; i < response.count; i++)
+                            {
+                                $('<div id="tab_' + i + '"></div>').appendTo('#tabs');
+                            }
+
+                            /*******************  чит изза асинхронности. пока не смог побороть в цикл. мб параметр async */
+                            if (response.count >= 1)
+                                $.ajax({
+                                    type: "POST",
+                                    url:  "makeTable.php",
+                                    dateType: "html",
+                                    data: "tabindex=" + 0,
+                                    success: function(table){
+                                        //$('<div id="tab_' + i + '">' + table + '</div>').appendTo('#tabs');
+                                        $('<div>' + table + '</div>').appendTo('#tab_0');
+                                    }
+                                });
+                            if (response.count >= 2)
+                                $.ajax({
+                                    type: "POST",
+                                    url:  "makeTable.php",
+                                    dateType: "html",
+                                    data: "tabindex=" + 1,
+                                    success: function(table){
+                                        //$('<div id="tab_' + i + '">' + table + '</div>').appendTo('#tabs');
+                                        $('<div>' + table + '</div>').appendTo('#tab_1');
+                                    }
+                                });
+                            if (response.count >= 3)
+                                $.ajax({
+                                    type: "POST",
+                                    url:  "makeTable.php",
+                                    dateType: "html",
+                                    data: "tabindex=" + 2,
+                                    success: function(table){
+                                        //$('<div id="tab_' + i + '">' + table + '</div>').appendTo('#tabs');
+                                        $('<div>' + table + '</div>').appendTo('#tab_2');
+                                    }
+                                });
+                            if (response.count >= 3)
+                                $.ajax({
+                                    type: "POST",
+                                    url:  "makeTable.php",
+                                    dateType: "html",
+                                    data: "tabindex=" + 3,
+                                    success: function(table){
+                                        //$('<div id="tab_' + i + '">' + table + '</div>').appendTo('#tabs');
+                                        $('<div>' + table + '</div>').appendTo('#tab_3');
+                                    }
+                                });
+                            /*************************************************************************/
+
+//                            }
+                            $('#tabs').tabs('refresh');
+                        }
+                    });
+                }
+            );
+
+            $('#dialog').dialog({
+//                modal: true,
+                width: 270,
+                resizable: false,
+                draggable: true,
+                position: ["center"],
+                title:"Ваш филиал:",
+                beforeClose: function(){
+                    $('#dialog').toggle("fold", "fast");
+
+                    return false;
+                }
+            });
+
+            console.log("ready to make menu");
+            $.ajax({
+                type: "POST",
+                url:  "getFilialsList.php",
+
+                dateType: "json",
+                success: function(filList){
+                    var filials = [filList.filial0, filList.filial1, filList.filial2, filList.filial3, filList.filial4,
+                                    filList.filial5, filList.filial6, filList.filial7, filList.filial8, filList.filial9,
+                                    filList.filial10, filList.filial11, filList.filial12, filList.filial13, filList.filial14, filList.filial15,
+                                    filList.filial16, filList.filial17];
+                    for (var i = 0; i < filList.count; i++)
+                    {
+                        //console.log('<input class="flsBtns" type="radio" name="filialBtn" id="' + i + '/>');
+                        //console.log('<label for="' + i + '">' + filials[i] + '</label>');
+//                        $('<input class="flsBtns" type="radio" name="filialBtn" id="' + i + '"/>').appendTo('#filBtns');
+//                        $('<label for="' + i + '">' + filials[i] + '</label>').appendTo('#filBtns');
+                    //class="ui-button ui-widget ui-state-default ui-button-text-only"
+                    }
+                }
+            });
+
+            function test_msg()
+            {
+/*                var currentTabTitle = $('div[id="tabs"] ul .ui-tabs-active > a').attr('value');
+                console.log ("Активная вкладка: " + currentTabTitle);
+*/
+
+
+//                var idTable = $('#tabs').tabs("option", "active");
+//                console.log ("Активная вкладка: " + idTable);
+                var currentTabTitle = $('div[id="tabs"] ul .ui-tabs-active > a').attr('value');
+                console.log ("Активная вкладка: " + currentTabTitle);
+
+                var idTable = $('#tabs').tabs("option", "active");
+                console.log ("Активная вкладка: " + idTable);
+
+                $.ajax({
+                    type: "POST",
+                    url:  "getData.php",
+                    dateType: "json",
+                    data: "div=" + currentTabTitle,
+                    success: function(response){
+                        var rows_day1 = $.parseJSON(response.day_1);
+                        var rows_day2 = $.parseJSON(response.day_2);
+                        var rows_day3 = $.parseJSON(response.day_3);
+                        var rows_day4 = $.parseJSON(response.day_4);
+                        var rows_day5 = $.parseJSON(response.day_5);
+                        var rows_day6 = $.parseJSON(response.day_6);
+                        var rows_day7 = $.parseJSON(response.day_7);
+                        var rows_day8 = $.parseJSON(response.day_8);
+                        var rows_day9 = $.parseJSON(response.day_9);
+                        var rows_day10 = $.parseJSON(response.day_10);
+                        var rows_day11 = $.parseJSON(response.day_11);
+                        var rows_day12 = $.parseJSON(response.day_12);
+                        var rows_day13 = $.parseJSON(response.day_13);
+                        var rows_day14 = $.parseJSON(response.day_14);
+                        var rows_day15 = $.parseJSON(response.day_15);
+                        var rows_day16 = $.parseJSON(response.day_16);
+                        var rows_day17 = $.parseJSON(response.day_17);
+                        var rows_day18 = $.parseJSON(response.day_18);
+                        var rows_day19 = $.parseJSON(response.day_19);
+                        var rows_day20 = $.parseJSON(response.day_20);
+                        var rows_day21 = $.parseJSON(response.day_21);
+                        var rows_day22 = $.parseJSON(response.day_22);
+                        var rows_day23 = $.parseJSON(response.day_23);
+                        var rows_day24 = $.parseJSON(response.day_24);
+                        var rows_day25 = $.parseJSON(response.day_25);
+                        var rows_day26 = $.parseJSON(response.day_26);
+                        var rows_day27 = $.parseJSON(response.day_27);
+                        var rows_day28 = $.parseJSON(response.day_28);
+                        var rows_day29 = $.parseJSON(response.day_29);
+                        var rows_day30 = $.parseJSON(response.day_30);
+                        var rows_day31 = $.parseJSON(response.day_31);
+
+                        $('#tab_' + idTable + '_col_1_row_1').text(rows_day1.col_1);   $('#tab_' + idTable + '_col_2_row_1').text(rows_day1.col_2);
+                        $('#tab_' + idTable + '_col_1_row_2').text(rows_day2.col_1);   $('#tab_' + idTable + '_col_2_row_2').text(rows_day2.col_2);
+                        $('#tab_' + idTable + '_col_1_row_3').text(rows_day3.col_1);   $('#tab_' + idTable + '_col_2_row_3').text(rows_day3.col_2);
+                        $('#tab_' + idTable + '_col_1_row_4').text(rows_day4.col_1);   $('#tab_' + idTable + '_col_2_row_4').text(rows_day4.col_2);
+                        $('#tab_' + idTable + '_col_1_row_5').text(rows_day5.col_1);   $('#tab_' + idTable + '_col_2_row_5').text(rows_day5.col_2);
+                        $('#tab_' + idTable + '_col_1_row_6').text(rows_day6.col_1);   $('#tab_' + idTable + '_col_2_row_6').text(rows_day6.col_2);
+                        $('#tab_' + idTable + '_col_1_row_7').text(rows_day7.col_1);   $('#tab_' + idTable + '_col_2_row_7').text(rows_day7.col_2);
+                        $('#tab_' + idTable + '_col_1_row_8').text(rows_day8.col_1);   $('#tab_' + idTable + '_col_2_row_8').text(rows_day8.col_2);
+                        $('#tab_' + idTable + '_col_1_row_9').text(rows_day9.col_1);   $('#tab_' + idTable + '_col_2_row_9').text(rows_day9.col_2);
+                        $('#tab_' + idTable + '_col_1_row_10').text(rows_day10.col_1); $('#tab_' + idTable + '_col_2_row_10').text(rows_day10.col_2);
+                        $('#tab_' + idTable + '_col_1_row_11').text(rows_day11.col_1); $('#tab_' + idTable + '_col_2_row_11').text(rows_day11.col_2);
+                        $('#tab_' + idTable + '_col_1_row_12').text(rows_day12.col_1); $('#tab_' + idTable + '_col_2_row_12').text(rows_day12.col_2);
+                        $('#tab_' + idTable + '_col_1_row_13').text(rows_day13.col_1); $('#tab_' + idTable + '_col_2_row_13').text(rows_day13.col_2);
+                        $('#tab_' + idTable + '_col_1_row_14').text(rows_day14.col_1); $('#tab_' + idTable + '_col_2_row_14').text(rows_day14.col_2);
+                        $('#tab_' + idTable + '_col_1_row_15').text(rows_day15.col_1); $('#tab_' + idTable + '_col_2_row_15').text(rows_day15.col_2);
+                        $('#tab_' + idTable + '_col_1_row_16').text(rows_day16.col_1); $('#tab_' + idTable + '_col_2_row_16').text(rows_day16.col_2);
+                        $('#tab_' + idTable + '_col_1_row_17').text(rows_day17.col_1); $('#tab_' + idTable + '_col_2_row_17').text(rows_day17.col_2);
+                        $('#tab_' + idTable + '_col_1_row_18').text(rows_day18.col_1); $('#tab_' + idTable + '_col_2_row_18').text(rows_day18.col_2);
+                        $('#tab_' + idTable + '_col_1_row_19').text(rows_day19.col_1); $('#tab_' + idTable + '_col_2_row_19').text(rows_day19.col_2);
+                        $('#tab_' + idTable + '_col_1_row_20').text(rows_day20.col_1); $('#tab_' + idTable + '_col_2_row_20').text(rows_day20.col_2);
+                        $('#tab_' + idTable + '_col_1_row_21').text(rows_day21.col_1); $('#tab_' + idTable + '_col_2_row_21').text(rows_day21.col_2);
+                        $('#tab_' + idTable + '_col_1_row_22').text(rows_day22.col_1); $('#tab_' + idTable + '_col_2_row_22').text(rows_day22.col_2);
+                        $('#tab_' + idTable + '_col_1_row_23').text(rows_day23.col_1); $('#tab_' + idTable + '_col_2_row_23').text(rows_day23.col_2);
+                        $('#tab_' + idTable + '_col_1_row_24').text(rows_day24.col_1); $('#tab_' + idTable + '_col_2_row_24').text(rows_day24.col_2);
+                        $('#tab_' + idTable + '_col_1_row_25').text(rows_day25.col_1); $('#tab_' + idTable + '_col_2_row_25').text(rows_day25.col_2);
+                        $('#tab_' + idTable + '_col_1_row_26').text(rows_day26.col_1); $('#tab_' + idTable + '_col_2_row_26').text(rows_day26.col_2);
+                        $('#tab_' + idTable + '_col_1_row_27').text(rows_day27.col_1); $('#tab_' + idTable + '_col_2_row_27').text(rows_day27.col_2);
+                        $('#tab_' + idTable + '_col_1_row_28').text(rows_day28.col_1); $('#tab_' + idTable + '_col_2_row_28').text(rows_day28.col_2);
+                        $('#tab_' + idTable + '_col_1_row_29').text(rows_day29.col_1); $('#tab_' + idTable + '_col_2_row_29').text(rows_day29.col_2);
+                        $('#tab_' + idTable + '_col_1_row_30').text(rows_day30.col_1); $('#tab_' + idTable + '_col_2_row_30').text(rows_day30.col_2);
+                        $('#tab_' + idTable + '_col_1_row_31').text(rows_day31.col_1); $('#tab_' + idTable + '_col_2_row_31').text(rows_day31.col_2);
+                        /***********************************************************************************************/
+
+                        for (var col = 1; col <= 46; col++)
+                        {
+                            var sum = 0;
+                            for (var row = 1; row <= 31; row++)
+                            {
+                                sum = sum + parseInt($('#tab_' + idTable + '_col_' + col + '_row_' + row).text(), 10);
+                            }
+                            $('#tab_' + idTable + '_col_' + col + '_row_32').text(sum);
+                        }
+                    }
+                })
+
+                // подсчет общей суммы столбцов
+
+            }
+
+            setInterval(test_msg, 2000);
+
+            $('button').click(function (e){
+                e.preventDefault() ;
+                switch ($(this).attr('id'))
+                {
+                    case "btn_1":
+                    {
+                        var currentTabTitle = $('div[id="tabs"] ul .ui-tabs-active > a').attr('value');
+                        console.log ("Активная вкладка: " + currentTabTitle);
+
+                        var idTable = $('#tabs').tabs("option", "active");
+                        console.log ("Активная вкладка: " + idTable);
+
+                        $.ajax({
+                            type: "POST",
+                            url:  "getData.php",
+                            dateType: "json",
+                            data: "div=" + currentTabTitle,
+                            success: function(response){
+                                /****** TODO
+                                 *
+                                 *  В sql базе, при внесении изменений сразу обсчитывать данные, а не на этапе запроса пользователя суммировать числа.
+                                 *  Иначе уже при 15 колонках - скорость запроса составляет 2 секунды (до 5 секунд в другой подсети) в сумме на все данные. это не камильфо
+                                 */
+                                /*var v51_arr = [response.v51.day01, response.v51.day02, response.v51.day03, response.v51.day04, response.v51.day05, response.v51.day06, response.v51.day07, response.v51.day08, response.v51.day09,
+                                                response.v51.day10, response.v51.day11, response.v51.day12, response.v51.day13, response.v51.day14, response.v51.day15, response.v51.day16, response.v51.day17, response.v51.day18, response.v51.day19,
+                                                response.v51.day20, response.v51.day21, response.v51.day22, response.v51.day23, response.v51.day24, response.v51.day25, response.v51.day26, response.v51.day27, response.v51.day28, response.v51.day29,
+                                                response.v51.day30, response.v51.day31];
+                                var v52_arr = [response.v52.day01, response.v52.day02, response.v52.day03, response.v52.day04, response.v52.day05, response.v52.day06, response.v52.day07, response.v52.day08, response.v52.day09,
+                                                response.v52.day10, response.v52.day11, response.v52.day12, response.v52.day13, response.v52.day14, response.v52.day15, response.v52.day16, response.v52.day17, response.v52.day18, response.v52.day19,
+                                                response.v52.day20, response.v52.day21, response.v52.day22, response.v52.day23, response.v52.day24, response.v52.day25, response.v52.day26, response.v52.day27, response.v52.day28, response.v52.day29,
+                                                response.v52.day30, response.v52.day31];
+                                var v50_arr_1 = [response.v50_1.day01, response.v50_1.day02, response.v50_1.day03, response.v50_1.day04, response.v50_1.day05, response.v50_1.day06, response.v50_1.day07, response.v50_1.day08, response.v50_1.day09,
+                                                response.v50_1.day10, response.v50_1.day11, response.v50_1.day12, response.v50_1.day13, response.v50_1.day14, response.v50_1.day15, response.v50_1.day16, response.v50_1.day17, response.v50_1.day18, response.v50_1.day19,
+                                                response.v50_1.day20, response.v50_1.day21, response.v50_1.day22, response.v50_1.day23, response.v50_1.day24, response.v50_1.day25, response.v50_1.day26, response.v50_1.day27, response.v50_1.day28, response.v50_1.day29,
+                                                response.v50_1.day30, response.v50_1.day31];
+                                var v50_arr_2 = [response.v50_2.day01, response.v50_2.day02, response.v50_2.day03, response.v50_2.day04, response.v50_2.day05, response.v50_2.day06, response.v50_2.day07, response.v50_2.day08, response.v50_2.day09,
+                                                response.v50_2.day10, response.v50_2.day11, response.v50_2.day12, response.v50_2.day13, response.v50_2.day14, response.v50_2.day15, response.v50_2.day16, response.v50_2.day17, response.v50_2.day18, response.v50_2.day19,
+                                                response.v50_2.day20, response.v50_2.day21, response.v50_2.day22, response.v50_2.day23, response.v50_2.day24, response.v50_2.day25, response.v50_2.day26, response.v50_2.day27, response.v50_2.day28, response.v50_2.day29,
+                                                response.v50_2.day30, response.v50_2.day31];
+                                var v50_arr_3 = [response.v50_3.day01, response.v50_3.day02, response.v50_3.day03, response.v50_3.day04, response.v50_3.day05, response.v50_3.day06, response.v50_3.day07, response.v50_3.day08, response.v50_3.day09,
+                                                response.v50_3.day10, response.v50_3.day11, response.v50_3.day12, response.v50_3.day13, response.v50_3.day14, response.v50_3.day15, response.v50_3.day16, response.v50_3.day17, response.v50_3.day18, response.v50_3.day19,
+                                                response.v50_3.day20, response.v50_3.day21, response.v50_3.day22, response.v50_3.day23, response.v50_3.day24, response.v50_3.day25, response.v50_3.day26, response.v50_3.day27, response.v50_3.day28, response.v50_3.day29,
+                                                response.v50_3.day30, response.v50_3.day31];
+                                var v50_arr_4 = [response.v50_4.day01, response.v50_4.day02, response.v50_4.day03, response.v50_4.day04, response.v50_4.day05, response.v50_4.day06, response.v50_4.day07, response.v50_4.day08, response.v50_4.day09,
+                                                response.v50_4.day10, response.v50_4.day11, response.v50_4.day12, response.v50_4.day13, response.v50_4.day14, response.v50_4.day15, response.v50_4.day16, response.v50_4.day17, response.v50_4.day18, response.v50_4.day19,
+                                                response.v50_4.day20, response.v50_4.day21, response.v50_4.day22, response.v50_4.day23, response.v50_4.day24, response.v50_4.day25, response.v50_4.day26, response.v50_4.day27, response.v50_4.day28, response.v50_4.day29,
+                                                response.v50_4.day30, response.v50_4.day31];
+                                var v50_arr_5 = [response.v50_5.day01, response.v50_5.day02, response.v50_5.day03, response.v50_5.day04, response.v50_5.day05, response.v50_5.day06, response.v50_5.day07, response.v50_5.day08, response.v50_5.day09,
+                                                response.v50_5.day10, response.v50_5.day11, response.v50_5.day12, response.v50_5.day13, response.v50_5.day14, response.v50_5.day15, response.v50_5.day16, response.v50_5.day17, response.v50_5.day18, response.v50_5.day19,
+                                                response.v50_5.day20, response.v50_5.day21, response.v50_5.day22, response.v50_5.day23, response.v50_5.day24, response.v50_5.day25, response.v50_5.day26, response.v50_5.day27, response.v50_5.day28, response.v50_5.day29,
+                                                response.v50_5.day30, response.v50_5.day31];
+                                var v50_arr_6 = [response.v50_6.day01, response.v50_6.day02, response.v50_6.day03, response.v50_6.day04, response.v50_6.day05, response.v50_6.day06, response.v50_6.day07, response.v50_6.day08, response.v50_6.day09,
+                                                response.v50_6.day10, response.v50_6.day11, response.v50_6.day12, response.v50_6.day13, response.v50_6.day14, response.v50_6.day15, response.v50_6.day16, response.v50_6.day17, response.v50_6.day18, response.v50_6.day19,
+                                                response.v50_6.day20, response.v50_6.day21, response.v50_6.day22, response.v50_6.day23, response.v50_6.day24, response.v50_6.day25, response.v50_6.day26, response.v50_6.day27, response.v50_6.day28, response.v50_6.day29,
+                                                response.v50_6.day30, response.v50_6.day31];
+                                var v50_arr_7 = [response.v50_7.day01, response.v50_7.day02, response.v50_7.day03, response.v50_7.day04, response.v50_7.day05, response.v50_7.day06, response.v50_7.day07, response.v50_7.day08, response.v50_7.day09,
+                                                response.v50_7.day10, response.v50_7.day11, response.v50_7.day12, response.v50_7.day13, response.v50_7.day14, response.v50_7.day15, response.v50_7.day16, response.v50_7.day17, response.v50_7.day18, response.v50_7.day19,
+                                                response.v50_7.day20, response.v50_7.day21, response.v50_7.day22, response.v50_7.day23, response.v50_7.day24, response.v50_7.day25, response.v50_7.day26, response.v50_7.day27, response.v50_7.day28, response.v50_7.day29,
+                                                response.v50_7.day30, response.v50_7.day31];
+                                var v50_arr_8 = [response.v50_8.day01, response.v50_8.day02, response.v50_8.day03, response.v50_8.day04, response.v50_8.day05, response.v50_8.day06, response.v50_8.day07, response.v50_8.day08, response.v50_8.day09,
+                                                response.v50_8.day10, response.v50_8.day11, response.v50_8.day12, response.v50_8.day13, response.v50_8.day14, response.v50_8.day15, response.v50_8.day16, response.v50_8.day17, response.v50_8.day18, response.v50_8.day19,
+                                                response.v50_8.day20, response.v50_8.day21, response.v50_8.day22, response.v50_8.day23, response.v50_8.day24, response.v50_8.day25, response.v50_8.day26, response.v50_8.day27, response.v50_8.day28, response.v50_8.day29,
+                                                response.v50_8.day30, response.v50_8.day31];
+                                var v50_arr_9 = [response.v50_9.day01, response.v50_9.day02, response.v50_9.day03, response.v50_9.day04, response.v50_9.day05, response.v50_9.day06, response.v50_9.day07, response.v50_9.day08, response.v50_9.day09,
+                                                response.v50_9.day10, response.v50_9.day11, response.v50_9.day12, response.v50_9.day13, response.v50_9.day14, response.v50_9.day15, response.v50_9.day16, response.v50_9.day17, response.v50_9.day18, response.v50_9.day19,
+                                                response.v50_9.day20, response.v50_9.day21, response.v50_9.day22, response.v50_9.day23, response.v50_9.day24, response.v50_9.day25, response.v50_9.day26, response.v50_9.day27, response.v50_9.day28, response.v50_9.day29,
+                                                response.v50_9.day30, response.v50_9.day31];
+                                var v50_arr_10 = [response.v50_10.day01, response.v50_10.day02, response.v50_10.day03, response.v50_10.day04, response.v50_10.day05, response.v50_10.day06, response.v50_10.day07, response.v50_10.day08, response.v50_10.day09,
+                                                response.v50_10.day10, response.v50_10.day11, response.v50_10.day12, response.v50_10.day13, response.v50_10.day14, response.v50_10.day15, response.v50_10.day16, response.v50_10.day17, response.v50_10.day18, response.v50_10.day19,
+                                                response.v50_10.day20, response.v50_10.day21, response.v50_10.day22, response.v50_10.day23, response.v50_10.day24, response.v50_10.day25, response.v50_10.day26, response.v50_10.day27, response.v50_10.day28, response.v50_10.day29,
+                                                response.v50_10.day30, response.v50_10.day31];
+                                var v50_arr_11 = [response.v50_11.day01, response.v50_11.day02, response.v50_11.day03, response.v50_11.day04, response.v50_11.day05, response.v50_11.day06, response.v50_11.day07, response.v50_11.day08, response.v50_11.day09,
+                                                response.v50_11.day10, response.v50_11.day11, response.v50_11.day12, response.v50_11.day13, response.v50_11.day14, response.v50_11.day15, response.v50_11.day16, response.v50_11.day17, response.v50_11.day18, response.v50_11.day19,
+                                                response.v50_11.day20, response.v50_11.day21, response.v50_11.day22, response.v50_11.day23, response.v50_11.day24, response.v50_11.day25, response.v50_11.day26, response.v50_11.day27, response.v50_11.day28, response.v50_11.day29,
+                                                response.v50_11.day30, response.v50_11.day31];
+                                var v50_arr_12 = [response.v50_12.day01, response.v50_12.day02, response.v50_12.day03, response.v50_12.day04, response.v50_12.day05, response.v50_12.day06, response.v50_12.day07, response.v50_12.day08, response.v50_12.day09,
+                                                response.v50_12.day10, response.v50_12.day11, response.v50_12.day12, response.v50_12.day13, response.v50_12.day14, response.v50_12.day15, response.v50_12.day16, response.v50_12.day17, response.v50_12.day18, response.v50_12.day19,
+                                                response.v50_12.day20, response.v50_12.day21, response.v50_12.day22, response.v50_12.day23, response.v50_12.day24, response.v50_12.day25, response.v50_12.day26, response.v50_12.day27, response.v50_12.day28, response.v50_12.day29,
+                                                response.v50_12.day30, response.v50_12.day31];
+                                var v50_arr_13 = [response.v50_13.day01, response.v50_13.day02, response.v50_13.day03, response.v50_13.day04, response.v50_13.day05, response.v50_13.day06, response.v50_13.day07, response.v50_13.day08, response.v50_13.day09,
+                                                response.v50_13.day10, response.v50_13.day11, response.v50_13.day12, response.v50_13.day13, response.v50_13.day14, response.v50_13.day15, response.v50_13.day16, response.v50_13.day17, response.v50_13.day18, response.v50_13.day19,
+                                                response.v50_13.day20, response.v50_13.day21, response.v50_13.day22, response.v50_13.day23, response.v50_13.day24, response.v50_13.day25, response.v50_13.day26, response.v50_13.day27, response.v50_13.day28, response.v50_13.day29,
+                                                response.v50_13.day30, response.v50_13.day31];
+                                var v20_arr_1 = [response.v20_1.day01, response.v20_1.day02, response.v20_1.day03, response.v20_1.day04, response.v20_1.day05, response.v20_1.day06, response.v20_1.day07, response.v20_1.day08, response.v20_1.day09,
+                                    response.v20_1.day10, response.v20_1.day11, response.v20_1.day12, response.v20_1.day13, response.v20_1.day14, response.v20_1.day15, response.v20_1.day16, response.v20_1.day17, response.v20_1.day18, response.v20_1.day19,
+                                    response.v20_1.day20, response.v20_1.day21, response.v20_1.day22, response.v20_1.day23, response.v20_1.day24, response.v20_1.day25, response.v20_1.day26, response.v20_1.day27, response.v20_1.day28, response.v20_1.day29,
+                                    response.v20_1.day30, response.v20_1.day31];
+                                var v20_arr_2 = [response.v20_2.day01, response.v20_2.day02, response.v20_2.day03, response.v20_2.day04, response.v20_2.day05, response.v20_2.day06, response.v20_2.day07, response.v20_2.day08, response.v20_2.day09,
+                                    response.v20_2.day10, response.v20_2.day11, response.v20_2.day12, response.v20_2.day13, response.v20_2.day14, response.v20_2.day15, response.v20_2.day16, response.v20_2.day17, response.v20_2.day18, response.v20_2.day19,
+                                    response.v20_2.day20, response.v20_2.day21, response.v20_2.day22, response.v20_2.day23, response.v20_2.day24, response.v20_2.day25, response.v20_2.day26, response.v20_2.day27, response.v20_2.day28, response.v20_2.day29,
+                                    response.v20_2.day30, response.v20_2.day31];
+                                var v20_arr_3 = [response.v20_3.day01, response.v20_3.day02, response.v20_3.day03, response.v20_3.day04, response.v20_3.day05, response.v20_3.day06, response.v20_3.day07, response.v20_3.day08, response.v20_3.day09,
+                                    response.v20_3.day10, response.v20_3.day11, response.v20_3.day12, response.v20_3.day13, response.v20_3.day14, response.v20_3.day15, response.v20_3.day16, response.v20_3.day17, response.v20_3.day18, response.v20_3.day19,
+                                    response.v20_3.day20, response.v20_3.day21, response.v20_3.day22, response.v20_3.day23, response.v20_3.day24, response.v20_3.day25, response.v20_3.day26, response.v20_3.day27, response.v20_3.day28, response.v20_3.day29,
+                                    response.v20_3.day30, response.v20_3.day31];
+                                var v20_arr_4 = [response.v20_4.day01, response.v20_4.day02, response.v20_4.day03, response.v20_4.day04, response.v20_4.day05, response.v20_4.day06, response.v20_4.day07, response.v20_4.day08, response.v20_4.day09,
+                                    response.v20_4.day10, response.v20_4.day11, response.v20_4.day12, response.v20_4.day13, response.v20_4.day14, response.v20_4.day15, response.v20_4.day16, response.v20_4.day17, response.v20_4.day18, response.v20_4.day19,
+                                    response.v20_4.day20, response.v20_4.day21, response.v20_4.day22, response.v20_4.day23, response.v20_4.day24, response.v20_4.day25, response.v20_4.day26, response.v20_4.day27, response.v20_4.day28, response.v20_4.day29,
+                                    response.v20_4.day30, response.v20_4.day31];
+                                var v20_arr_5 = [response.v20_5.day01, response.v20_5.day02, response.v20_5.day03, response.v20_5.day04, response.v20_5.day05, response.v20_5.day06, response.v20_5.day07, response.v20_5.day08, response.v20_5.day09,
+                                    response.v20_5.day10, response.v20_5.day11, response.v20_5.day12, response.v20_5.day13, response.v20_5.day14, response.v20_5.day15, response.v20_5.day16, response.v20_5.day17, response.v20_5.day18, response.v20_5.day19,
+                                    response.v20_5.day20, response.v20_5.day21, response.v20_5.day22, response.v20_5.day23, response.v20_5.day24, response.v20_5.day25, response.v20_5.day26, response.v20_5.day27, response.v20_5.day28, response.v20_5.day29,
+                                    response.v20_5.day30, response.v20_5.day31];
+                                var v20_arr_6 = [response.v20_6.day01, response.v20_6.day02, response.v20_6.day03, response.v20_6.day04, response.v20_6.day05, response.v20_6.day06, response.v20_6.day07, response.v20_6.day08, response.v20_6.day09,
+                                    response.v20_6.day10, response.v20_6.day11, response.v20_6.day12, response.v20_6.day13, response.v20_6.day14, response.v20_6.day15, response.v20_6.day16, response.v20_6.day17, response.v20_6.day18, response.v20_6.day19,
+                                    response.v20_6.day20, response.v20_6.day21, response.v20_6.day22, response.v20_6.day23, response.v20_6.day24, response.v20_6.day25, response.v20_6.day26, response.v20_6.day27, response.v20_6.day28, response.v20_6.day29,
+                                    response.v20_6.day30, response.v20_6.day31];
+                                var v20_arr_7 = [response.v20_7.day01, response.v20_7.day02, response.v20_7.day03, response.v20_7.day04, response.v20_7.day05, response.v20_7.day06, response.v20_7.day07, response.v20_7.day08, response.v20_7.day09,
+                                    response.v20_7.day10, response.v20_7.day11, response.v20_7.day12, response.v20_7.day13, response.v20_7.day14, response.v20_7.day15, response.v20_7.day16, response.v20_7.day17, response.v20_7.day18, response.v20_7.day19,
+                                    response.v20_7.day20, response.v20_7.day21, response.v20_7.day22, response.v20_7.day23, response.v20_7.day24, response.v20_7.day25, response.v20_7.day26, response.v20_7.day27, response.v20_7.day28, response.v20_7.day29,
+                                    response.v20_7.day30, response.v20_7.day31];
+                                var v20_arr_8 = [response.v20_8.day01, response.v20_8.day02, response.v20_8.day03, response.v20_8.day04, response.v20_8.day05, response.v20_8.day06, response.v20_8.day07, response.v20_8.day08, response.v20_8.day09,
+                                    response.v20_8.day10, response.v20_8.day11, response.v20_8.day12, response.v20_8.day13, response.v20_8.day14, response.v20_8.day15, response.v20_8.day16, response.v20_8.day17, response.v20_8.day18, response.v20_8.day19,
+                                    response.v20_8.day20, response.v20_8.day21, response.v20_8.day22, response.v20_8.day23, response.v20_8.day24, response.v20_8.day25, response.v20_8.day26, response.v20_8.day27, response.v20_8.day28, response.v20_8.day29,
+                                    response.v20_8.day30, response.v20_8.day31];
+                                for (var i = 0; i < 31; i++)
+                                {
+                                    // по категориям
+                                    $('#tab_' + idTable + '_col_1_row_' + (i + 1)).text((v51_arr[i] == null ? "0" : (v51_arr[i] + v52_arr[i])));
+                                    $('#tab_' + idTable + '_col_2_row_' + (i + 1)).text((v51_arr[i] == null ? "0" : v51_arr[i]));
+                                    $('#tab_' + idTable + '_col_3_row_' + (i + 1)).text((v50_arr_1[i] == null ? "0" : v50_arr_1[i]));
+                                    $('#tab_' + idTable + '_col_4_row_' + (i + 1)).text((v50_arr_2[i] == null ? "0" : v50_arr_2[i]));
+                                    $('#tab_' + idTable + '_col_5_row_' + (i + 1)).text((v50_arr_3[i] == null ? "0" : v50_arr_3[i]));
+                                    $('#tab_' + idTable + '_col_6_row_' + (i + 1)).text((v50_arr_4[i] == null ? "0" : v50_arr_4[i]));
+                                    $('#tab_' + idTable + '_col_7_row_' + (i + 1)).text((v50_arr_5[i] == null ? "0" : v50_arr_5[i]));
+                                    $('#tab_' + idTable + '_col_8_row_' + (i + 1)).text((v50_arr_6[i] == null ? "0" : v50_arr_6[i]));
+                                    $('#tab_' + idTable + '_col_9_row_' + (i + 1)).text((v50_arr_7[i] == null ? "0" : v50_arr_7[i]));
+                                    $('#tab_' + idTable + '_col_10_row_' + (i + 1)).text((v50_arr_8[i] == null ? "0" : v50_arr_8[i]));
+                                    $('#tab_' + idTable + '_col_11_row_' + (i + 1)).text((v50_arr_9[i] == null ? "0" : v50_arr_9[i]));
+                                    $('#tab_' + idTable + '_col_12_row_' + (i + 1)).text((v50_arr_10[i] == null ? "0" : v50_arr_10[i]));
+                                    $('#tab_' + idTable + '_col_13_row_' + (i + 1)).text((v50_arr_11[i] == null ? "0" : v50_arr_11[i]));
+                                    $('#tab_' + idTable + '_col_14_row_' + (i + 1)).text((v50_arr_12[i] == null ? "0" : v50_arr_12[i]));
+                                    $('#tab_' + idTable + '_col_15_row_' + (i + 1)).text((v50_arr_13[i] == null ? "0" : v50_arr_13[i]));
+
+                                    // по образованию
+                                    $('#tab_' + idTable + '_col_25_row_' + (i + 1)).text((v20_arr_1[i] == null ? "0" : v20_arr_1[i]));
+                                    $('#tab_' + idTable + '_col_26_row_' + (i + 1)).text((v20_arr_2[i] == null ? "0" : v20_arr_2[i]));
+                                    $('#tab_' + idTable + '_col_27_row_' + (i + 1)).text((v20_arr_3[i] == null ? "0" : v20_arr_3[i]));
+                                    $('#tab_' + idTable + '_col_28_row_' + (i + 1)).text((v20_arr_4[i] == null ? "0" : v20_arr_4[i]));
+                                    $('#tab_' + idTable + '_col_29_row_' + (i + 1)).text((v20_arr_5[i] == null ? "0" : v20_arr_5[i]));
+                                    $('#tab_' + idTable + '_col_30_row_' + (i + 1)).text((v20_arr_6[i] == null ? "0" : v20_arr_6[i]));
+                                    $('#tab_' + idTable + '_col_31_row_' + (i + 1)).text((v20_arr_7[i] == null ? "0" : v20_arr_7[i]));
+                                    $('#tab_' + idTable + '_col_32_row_' + (i + 1)).text((v20_arr_8[i] == null ? "0" : v20_arr_8[i]));
+
+                                }*/
+                                var rows = [response.day_1, response.day_2, response.day_03, response.day_04, response.day_05, response.day_06, response.day_07, response.day_08, response.day_09,
+                                    response.day_10, response.day_11, response.day_12, response.day_13, response.day_14, response.day_15, response.day_16, response.day_17, response.day_18, response.day_19,
+                                    response.day_20, response.day_21, response.day_22, response.day_23, response.day_24, response.day_25, response.day_26, response.day_27, response.day_28, response.day_29,
+                                    response.day_30, response.day_31];
+
+                                /*
+                                 * TODO:
+                                 *  избавиться от этого маразма
+                                 */
+                                var rows_day1 = $.parseJSON(response.day_1);
+                                var rows_day2 = $.parseJSON(response.day_2);
+                                var rows_day3 = $.parseJSON(response.day_3);
+                                var rows_day4 = $.parseJSON(response.day_4);
+                                var rows_day5 = $.parseJSON(response.day_5);
+                                var rows_day6 = $.parseJSON(response.day_6);
+                                var rows_day7 = $.parseJSON(response.day_7);
+                                var rows_day8 = $.parseJSON(response.day_8);
+                                var rows_day9 = $.parseJSON(response.day_9);
+                                var rows_day10 = $.parseJSON(response.day_10);
+                                var rows_day11 = $.parseJSON(response.day_11);
+                                var rows_day12 = $.parseJSON(response.day_12);
+                                var rows_day13 = $.parseJSON(response.day_13);
+                                var rows_day14 = $.parseJSON(response.day_14);
+                                var rows_day15 = $.parseJSON(response.day_15);
+                                var rows_day16 = $.parseJSON(response.day_16);
+                                var rows_day17 = $.parseJSON(response.day_17);
+                                var rows_day18 = $.parseJSON(response.day_18);
+                                var rows_day19 = $.parseJSON(response.day_19);
+                                var rows_day20 = $.parseJSON(response.day_20);
+                                var rows_day21 = $.parseJSON(response.day_21);
+                                var rows_day22 = $.parseJSON(response.day_22);
+                                var rows_day23 = $.parseJSON(response.day_23);
+                                var rows_day24 = $.parseJSON(response.day_24);
+                                var rows_day25 = $.parseJSON(response.day_25);
+                                var rows_day26 = $.parseJSON(response.day_26);
+                                var rows_day27 = $.parseJSON(response.day_27);
+                                var rows_day28 = $.parseJSON(response.day_28);
+                                var rows_day29 = $.parseJSON(response.day_29);
+                                var rows_day30 = $.parseJSON(response.day_30);
+                                var rows_day31 = $.parseJSON(response.day_31);
+
+                                $('#tab_' + idTable + '_col_1_row_1').text(rows_day1.col_1);   $('#tab_' + idTable + '_col_2_row_1').text(rows_day1.col_2);
+                                $('#tab_' + idTable + '_col_1_row_2').text(rows_day2.col_1);   $('#tab_' + idTable + '_col_2_row_2').text(rows_day2.col_2);
+                                $('#tab_' + idTable + '_col_1_row_3').text(rows_day3.col_1);   $('#tab_' + idTable + '_col_2_row_3').text(rows_day3.col_2);
+                                $('#tab_' + idTable + '_col_1_row_4').text(rows_day4.col_1);   $('#tab_' + idTable + '_col_2_row_4').text(rows_day4.col_2);
+                                $('#tab_' + idTable + '_col_1_row_5').text(rows_day5.col_1);   $('#tab_' + idTable + '_col_2_row_5').text(rows_day5.col_2);
+                                $('#tab_' + idTable + '_col_1_row_6').text(rows_day6.col_1);   $('#tab_' + idTable + '_col_2_row_6').text(rows_day6.col_2);
+                                $('#tab_' + idTable + '_col_1_row_7').text(rows_day7.col_1);   $('#tab_' + idTable + '_col_2_row_7').text(rows_day7.col_2);
+                                $('#tab_' + idTable + '_col_1_row_8').text(rows_day8.col_1);   $('#tab_' + idTable + '_col_2_row_8').text(rows_day8.col_2);
+                                $('#tab_' + idTable + '_col_1_row_9').text(rows_day9.col_1);   $('#tab_' + idTable + '_col_2_row_9').text(rows_day9.col_2);
+                                $('#tab_' + idTable + '_col_1_row_10').text(rows_day10.col_1); $('#tab_' + idTable + '_col_2_row_10').text(rows_day10.col_2);
+                                $('#tab_' + idTable + '_col_1_row_11').text(rows_day11.col_1); $('#tab_' + idTable + '_col_2_row_11').text(rows_day11.col_2);
+                                $('#tab_' + idTable + '_col_1_row_12').text(rows_day12.col_1); $('#tab_' + idTable + '_col_2_row_12').text(rows_day12.col_2);
+                                $('#tab_' + idTable + '_col_1_row_13').text(rows_day13.col_1); $('#tab_' + idTable + '_col_2_row_13').text(rows_day13.col_2);
+                                $('#tab_' + idTable + '_col_1_row_14').text(rows_day14.col_1); $('#tab_' + idTable + '_col_2_row_14').text(rows_day14.col_2);
+                                $('#tab_' + idTable + '_col_1_row_15').text(rows_day15.col_1); $('#tab_' + idTable + '_col_2_row_15').text(rows_day15.col_2);
+                                $('#tab_' + idTable + '_col_1_row_16').text(rows_day16.col_1); $('#tab_' + idTable + '_col_2_row_16').text(rows_day16.col_2);
+                                $('#tab_' + idTable + '_col_1_row_17').text(rows_day17.col_1); $('#tab_' + idTable + '_col_2_row_17').text(rows_day17.col_2);
+                                $('#tab_' + idTable + '_col_1_row_18').text(rows_day18.col_1); $('#tab_' + idTable + '_col_2_row_18').text(rows_day18.col_2);
+                                $('#tab_' + idTable + '_col_1_row_19').text(rows_day19.col_1); $('#tab_' + idTable + '_col_2_row_19').text(rows_day19.col_2);
+                                $('#tab_' + idTable + '_col_1_row_20').text(rows_day20.col_1); $('#tab_' + idTable + '_col_2_row_20').text(rows_day20.col_2);
+                                $('#tab_' + idTable + '_col_1_row_21').text(rows_day21.col_1); $('#tab_' + idTable + '_col_2_row_21').text(rows_day21.col_2);
+                                $('#tab_' + idTable + '_col_1_row_22').text(rows_day22.col_1); $('#tab_' + idTable + '_col_2_row_22').text(rows_day22.col_2);
+                                $('#tab_' + idTable + '_col_1_row_23').text(rows_day23.col_1); $('#tab_' + idTable + '_col_2_row_23').text(rows_day23.col_2);
+                                $('#tab_' + idTable + '_col_1_row_24').text(rows_day24.col_1); $('#tab_' + idTable + '_col_2_row_24').text(rows_day24.col_2);
+                                $('#tab_' + idTable + '_col_1_row_25').text(rows_day25.col_1); $('#tab_' + idTable + '_col_2_row_25').text(rows_day25.col_2);
+                                $('#tab_' + idTable + '_col_1_row_26').text(rows_day26.col_1); $('#tab_' + idTable + '_col_2_row_26').text(rows_day26.col_2);
+                                $('#tab_' + idTable + '_col_1_row_27').text(rows_day27.col_1); $('#tab_' + idTable + '_col_2_row_27').text(rows_day27.col_2);
+                                $('#tab_' + idTable + '_col_1_row_28').text(rows_day28.col_1); $('#tab_' + idTable + '_col_2_row_28').text(rows_day28.col_2);
+                                $('#tab_' + idTable + '_col_1_row_29').text(rows_day29.col_1); $('#tab_' + idTable + '_col_2_row_29').text(rows_day29.col_2);
+                                $('#tab_' + idTable + '_col_1_row_30').text(rows_day30.col_1); $('#tab_' + idTable + '_col_2_row_30').text(rows_day30.col_2);
+                                $('#tab_' + idTable + '_col_1_row_31').text(rows_day31.col_1); $('#tab_' + idTable + '_col_2_row_31').text(rows_day31.col_2);
+                                /***********************************************************************************************/
+
+                                for (var col = 1; col <= 46; col++)
+                                {
+                                    var sum = 0;
+                                    for (var row = 1; row <= 31; row++)
+                                    {
+                                        sum = sum + parseInt($('#tab_' + idTable + '_col_' + col + '_row_' + row).text(), 10);
+                                    }
+                                    $('#tab_' + idTable + '_col_' + col + '_row_32').text(sum);
+                                }
+                            }
+                        })
+
+
+
+                        break;
+                    }
+
+                    case "btn_10":
+                    {
+                        console.log('export excel');
+                        tableToExcel('diary_part1_tab' + $('#tabs').tabs("option", "active"), 'W3C Example Table');
+                        break;
+                    }
+                }
+            });
+
+
+            var tableToExcel = (function() {
+                var uri = 'data:application/vnd.ms-excel;base64,'
+                    , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+                    , base64 = function(s) { return window.btoa(unescape(encodeURIComponent(s))) }
+                    , format = function(s, c) { return s.replace(/{(\w+)}/g, function(m, p) { return c[p]; }) }
+                return function(table, name) {
+                    var table = document.getElementById('diary_part1_tab' + $('#tabs').tabs("option", "active"));
+                    var ctx = {worksheet: 'Дневник часть 1 - ' + $('div[id="tabs"] ul .ui-tabs-active > a').attr('value') || 'Worksheet', table: table.innerHTML}
+                    window.location.href = uri + base64(format(template, ctx));
+                }()
+            });
+
+        });
+
+
+
+
+
+    </script>
+
+<body>
+<button id="btn_1"> Подсчет: v51+v52 </button>
+<button id="btn_10" > Выгрузка в Excel </button>
+<button id="btn_11" disabled> Печать </button>
+
+
+<div id="dialog">
+    <div id="filBtns">
+        <script type="text/javascript">
+
+
+        </script>
+        <?php
+            require_once 'bdOper.php';
+            $bd = new bdOper();
+            $bd->getFilials();
+            $bd->getSubDivision($bd->filials[0]);
+
+            for ($i = 0; $i < count($bd->filials); $i++)
+            {
+                $filName = $bd->filials[$i];
+                $shortFilName = str_replace("илиал", "", $bd->filials[$i]);
+                $id = $bd->getFilialID($filName);
+                $bd->getSubDivision($filName);
+
+                echo '<input value="'. $filName. '" class="flsBtns" type="radio" name="filialBtn" id="'. $id. '"'. ($i == 0 ? " checked" : " "). ' />';
+                echo '<label for="'. $id. '">'. $shortFilName. '</label>';
+
+            }
+        ?>
+    </div>
+</div>
+
+<div id="tabs">
+    <ul id="tabsCont">
+    </ul>
+</div>
+
+</body>
+</html>
